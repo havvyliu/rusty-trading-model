@@ -1,10 +1,9 @@
-use chrono::TimeZone;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use crate::structs::Point;
 use crate::structs::TimeRange;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct TimeSeries {
     time_range_unit: TimeRange,
     start: DateTime<Utc>,
@@ -28,6 +27,10 @@ impl TimeSeries {
         &self.time_range_unit
     }
 
+    pub fn update_time_range_unit(self: &mut Self, unit: TimeRange) {
+        self.time_range_unit = unit;
+    }
+
     pub fn start(self: &Self) -> &DateTime<Utc> {
         &self.start
     }
@@ -36,7 +39,7 @@ impl TimeSeries {
         &self.end
     }
 
-    pub fn data(self: &Self) -> &Vec<Point> {
-        &self.data
+    pub fn data(self: &mut Self) -> &mut Vec<Point> {
+        &mut self.data
     }
 }

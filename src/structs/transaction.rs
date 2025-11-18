@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Transaction {
     symbol: String,
-    price: f32,
+    price: f64,
     amount: u32,
     operation: Operation,
 }
@@ -30,7 +30,7 @@ impl PartialEq for Transaction {
 impl Eq for Transaction {}
 
 impl Transaction {
-    pub fn buy(symbol: String, price: f32, amount: u32) -> Self {
+    pub fn buy(symbol: String, price: f64, amount: u32) -> Self {
         Self {
             symbol,
             price,
@@ -39,7 +39,7 @@ impl Transaction {
         }
     }
 
-    pub fn sell(symbol: String, price: f32, amount: u32) -> Self {
+    pub fn sell(symbol: String, price: f64, amount: u32) -> Self {
         Self {
             symbol,
             price,
@@ -52,7 +52,7 @@ impl Transaction {
         &self.symbol
     }
 
-    pub fn price(&self) -> f32 {
+    pub fn price(&self) -> f64 {
         self.price
     }
 

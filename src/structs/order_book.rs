@@ -5,7 +5,8 @@ use std::{
     sync::{Arc, Mutex, RwLock},
 };
 
-use super::{Point, Transaction};
+use super::{Point, Transaction, TimeSeries, TimeRange};
+use chrono::Utc;
 
 // use crate::{Point, Transaction};
 
@@ -15,6 +16,7 @@ pub struct OrderBook {
     sell_order: Arc<Mutex<BinaryHeap<Transaction>>>,
     points_queue: Arc<RwLock<LinkedList<Point>>>,
     cur_point: Arc<Mutex<Point>>,
+    time_series: Arc<RwLock<TimeSeries>>,
 }
 
 impl OrderBook {
@@ -29,6 +31,17 @@ impl OrderBook {
             sell_order,
             points_queue,
             cur_point,
+            time_series: Arc::new(RwLock::new(TimeSeries::default())),
+        }
+    }
+    
+    pub fn default() -> Self {
+        Self {
+            buy_order: Arc::new(Mutex::new(BinaryHeap::new())),
+            sell_order: Arc::new(Mutex::new(BinaryHeap::new())),
+            points_queue: Arc::new(RwLock::new(LinkedList::new())),
+            cur_point: Arc::new(Mutex::new(Point::new(0., 0., 0., 0., 0))),
+            time_series: Arc::new(RwLock::new(TimeSeries::default())),
         }
     }
 
@@ -53,6 +66,23 @@ impl OrderBook {
         Arc::clone(&self.cur_point)
     }
 
+    pub fn time_series(&self) -> Arc<RwLock<TimeSeries>> {
+        Arc::clone(&self.time_series)
+    }
+
+    pub fn update_time_series(&self) {
+        let points_guard = self.points_queue.read().unwrap();
+        let points_vec: Vec<Point> = points_guard.iter().cloned().collect();
+        
+        let mut time_series_guard = self.time_series.write().unwrap();
+        *time_series_guard = TimeSeries::new(
+            TimeRange::Minute,
+            Utc::now(),
+            Utc::now(),
+            points_vec
+        );
+    }
+
     pub fn execute(&self) {
         println!("Start executing...");
         let mut p = self.cur_point.lock().unwrap();
@@ -68,11 +98,12 @@ impl OrderBook {
                 let sell = sell_order.pop().unwrap();
                 let buy = buy_order.pop().unwrap();
                 let amount = min(sell.amount(), buy.amount());
-                p.close = (amount as f32 * buy.price() + p.volume as f32 * p.close)
-                    / (amount + p.volume) as f32;
+                let volume = p.volume as f64;
+                p.close = (amount as f64 * buy.price() + volume * p.close)
+                    / (amount as f64 + volume);
                 p.borrow_mut().volume += amount;
-                p.borrow_mut().high = f32::max(p.high, buy.price());
-                p.borrow_mut().low = f32::min(p.low, buy.price());
+                p.borrow_mut().high = f64::max(p.high, buy.price());
+                p.borrow_mut().low = f64::min(p.low, buy.price());
                 println!("Executed {:?} of stocks", amount);
                 if amount != buy.amount() {
                     buy_order.push(Transaction::buy(
