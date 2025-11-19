@@ -1,4 +1,5 @@
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -8,6 +9,7 @@ pub struct Point {
     pub low: f64,
     pub close: f64,
     pub volume: u32,
+    pub timestamp: DateTime<Utc>
 }
 
 impl Point {
@@ -18,6 +20,18 @@ impl Point {
             low,
             close,
             volume,
+            timestamp: Utc::now(),
+        }
+    }
+
+    pub fn new_with_timestamp(open: f64, high: f64, low: f64, close: f64, volume: u32, timestamp: DateTime<Utc>) -> Self {
+        Self {
+            open,
+            high,
+            low,
+            close,
+            volume,
+            timestamp,
         }
     }
 
@@ -28,6 +42,7 @@ impl Point {
             low: 0.0,
             close: 0.0,
             volume: 0,
+            timestamp: Utc::now(),
         }
     }
 
