@@ -39,6 +39,10 @@ impl TimeSeries {
         &self.end
     }
 
+    pub fn set_end(self: &mut Self, end: DateTime<Utc>) {
+        self.end = end;
+    }
+
     pub fn data(self: &mut Self) -> &mut Vec<Point> {
         &mut self.data
     }
